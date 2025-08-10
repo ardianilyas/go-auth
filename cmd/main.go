@@ -29,9 +29,10 @@ func main() {
 	r.POST("/register", authHandler.Register)
 	r.POST("/login", authHandler.Login)
 	r.POST("/refresh", authHandler.Refresh)
+	r.POST("/logout", authHandler.Logout)
 
 	auth := r.Group("/auth")
-	auth.Use(middlewares.AuthMiddleware())
+	auth.Use(middlewares.AuthMiddleware(), middlewares.CSRFMiddleware())
 	auth.GET("/me", authHandler.Me)
 
 	r.Run(":8000")

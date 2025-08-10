@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/ardianilyas/go-auth/internal/services"
+	"github.com/ardianilyas/go-auth/pkg/csrf"
 	"github.com/gin-gonic/gin"
 )
 
@@ -41,11 +42,20 @@ func (h *AuthHandler) Login(c *gin.Context) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
         return
     }
-    
-    c.SetCookie("access_token", access, 900, "/", "", true, true)
-    c.SetCookie("refresh_token", refresh, 604800, "/", "", true, true)
 
-    c.JSON(http.StatusOK, gin.H{"message": "login success"})
+    csrfToken, err := csrf.GenerateToken()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to generate CSRF token"})
+        return
+    }
+    
+    c.SetCookie("access_token", access, 900, "/", "", false, true)
+    c.SetCookie("refresh_token", refresh, 604800, "/", "", false, true)
+    c.SetCookie("csrf_token", csrfToken, 900, "/", "", false, true)
+
+    c.JSON(http.StatusOK, gin.H{
+        "message": "login success bro", 
+    })
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
@@ -68,8 +78,8 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 }
 
 func (h *AuthHandler) Logout(c *gin.Context) {
-    c.SetCookie("access_token", "", -1, "/", "", false, true)
-    c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+    c.SetCookie("access_token", "", -1, "/", "", true, true)
+    c.SetCookie("refresh_token", "", -1, "/", "", true, true)
     c.JSON(http.StatusOK, gin.H{"message": "logout success"})
 }
 
