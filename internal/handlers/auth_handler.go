@@ -41,23 +41,36 @@ func (h *AuthHandler) Login(c *gin.Context) {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid credentials"})
         return
     }
-    c.JSON(http.StatusOK, gin.H{"access_token": access, "refresh_token": refresh})
+    
+    c.SetCookie("access_token", access, 900, "/", "", true, true)
+    c.SetCookie("refresh_token", refresh, 604800, "/", "", true, true)
+
+    c.JSON(http.StatusOK, gin.H{"message": "login success"})
 }
 
 func (h *AuthHandler) Refresh(c *gin.Context) {
-    var req struct {
-        RefreshToken string `json:"refresh_token"`
-    }
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid request"})
+    refreshToken, err := c.Cookie("refresh_token")
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "missing refresh token"})
         return
     }
-    access, refresh, err := h.AuthService.Refresh(req.RefreshToken)
+
+    access, refresh, err := h.AuthService.Refresh(refreshToken)
     if err != nil {
         c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
         return
     }
-    c.JSON(http.StatusOK, gin.H{"access_token": access, "refresh_token": refresh})
+    
+    c.SetCookie("access_token", access, 900, "/", "", false, true)
+    c.SetCookie("refresh_token", refresh, 604800, "/", "", false, true)
+
+    c.JSON(http.StatusOK, gin.H{"message": "token refreshed"})
+}
+
+func (h *AuthHandler) Logout(c *gin.Context) {
+    c.SetCookie("access_token", "", -1, "/", "", false, true)
+    c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+    c.JSON(http.StatusOK, gin.H{"message": "logout success"})
 }
 
 func (h *AuthHandler) Me(c *gin.Context) {
