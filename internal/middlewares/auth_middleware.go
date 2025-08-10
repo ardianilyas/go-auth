@@ -9,16 +9,18 @@ import (
 
 func AuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
-        auth := c.GetHeader("Authorization")
-        if len(auth) < 7 || auth[:7] != "Bearer " {
-            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing token"})
-            return
-        }
-        claims, err := token.ParseToken(auth[7:])
+        tokenStr, err := c.Cookie("access_token")
         if err != nil {
-            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
             return
         }
+
+        claims, err := token.ParseToken(tokenStr)
+        if err != nil {
+            c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+            return
+        }
+
         c.Set("user_id", claims.UserID)
         c.Next()
     }
