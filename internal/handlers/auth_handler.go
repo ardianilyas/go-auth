@@ -49,9 +49,9 @@ func (h *AuthHandler) Login(c *gin.Context) {
         return
     }
     
-    c.SetCookie("access_token", access, 900, "/", "", false, true)
-    c.SetCookie("refresh_token", refresh, 604800, "/", "", false, true)
-    c.SetCookie("csrf_token", csrfToken, 900, "/", "", false, true)
+    c.SetCookie("access_token", access, 900, "/", "", true, true)
+    c.SetCookie("refresh_token", refresh, 604800, "/", "", true, true)
+    c.SetCookie("csrf_token", csrfToken, 900, "/", "", true, true)
 
     c.JSON(http.StatusOK, gin.H{
         "message": "login success bro", 
@@ -71,8 +71,8 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
         return
     }
     
-    c.SetCookie("access_token", access, 900, "/", "", false, true)
-    c.SetCookie("refresh_token", refresh, 604800, "/", "", false, true)
+    c.SetCookie("access_token", access, 900, "/", "", true, true)
+    c.SetCookie("refresh_token", refresh, 604800, "/", "", true, true)
 
     c.JSON(http.StatusOK, gin.H{"message": "token refreshed"})
 }
